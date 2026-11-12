@@ -1,0 +1,101 @@
+:root {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-bebas: 'Bebas Neue', sans-serif;
+
+  --color-oled-black: #000000;
+  --color-apple-red: #ff3b30;
+  --color-apple-orange: #ff9f0a;
+  --color-apple-green: #30d158;
+  --color-apple-blue: #0a84ff;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-oled-black);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 3D Flip Card Animation */
+@keyframes flapDown {
+  0% {
+    transform: rotateX(0deg);
+    background-color: #22252e;
+  }
+  100% {
+    transform: rotateX(-180deg);
+    background-color: #14151b;
+  }
+}
+
+/* Music Soundwave Bars */
+@keyframes soundWave {
+  0% {
+    height: 15%;
+  }
+  100% {
+    height: 100%;
+  }
+}
+
+/* Charging Edge Lighting Effect */
+@keyframes chargingPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.65;
+  }
+}
+
+@keyframes subtleBreathing {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 2px currentColor);
+  }
+  50% {
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 8px currentColor);
+  }
+}
+
+/* Hide scrollbars everywhere */
+::-webkit-scrollbar {
+  display: none;
+}
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Quick-liquid styling helper */
+.liquid-glass-card {
+  will-change: transform, backdrop-filter;
+}
