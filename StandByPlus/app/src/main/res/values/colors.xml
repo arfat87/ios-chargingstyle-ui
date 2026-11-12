@@ -1,0 +1,10 @@
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="background_oled">#FF08090C</color>
+    <color name="surface_dark">#FF14161B</color>
+    <color name="surface_secondary">#FF1D2027</color>
+    <color name="accent_blue">#FFA8B9FF</color>
+    <color name="night_red">#FFFF453A</color>
+    <color name="border_subtle">#FF292D36</color>
+</resources>

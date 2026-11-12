@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Essential Screen Awake and Charging Trigger Permissions -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
+    <!-- Optional Widget Permissions (Requested on-demand) -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <application
+        android:name="com.standbyplus.app.StandByApplication"
+        android:allowBackup="true"
+        android:icon="@android:drawable/ic_lock_idle_charging"
+        android:label="@string/app_name"
+        android:roundIcon="@android:drawable/ic_lock_idle_charging"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.StandByPlus">
+
+        <!-- Main Portrait Application Hub -->
+        <activity
+            android:name="com.standbyplus.app.MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Dedicated Fullscreen Landscape StandBy Display Activity -->
+        <activity
+            android:name="com.standbyplus.app.StandByActivity"
+            android:exported="true"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:theme="@style/Theme.StandByPlus.Fullscreen"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true" />
+
+        <!-- Native Android Screensaver / Daydream Service -->
+        <service
+            android:name="com.standbyplus.services.standby.StandByDreamService"
+            android:exported="true"
+            android:icon="@android:drawable/ic_lock_idle_charging"
+            android:label="@string/screensaver_name"
+            android:permission="android.permission.BIND_DREAM_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.dreams.DreamService" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.dream"
+                android:resource="@xml/dream_info" />
+        </service>
+
+        <!-- Power Connected / Disconnected Broadcast Receiver -->
+        <receiver
+            android:name="com.standbyplus.services.charging.ChargingReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
+                <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">StandBy+</string>
+    <string name="app_tagline">Your Phone. Your Smart Display.</string>
+    <string name="start_standby">Start StandBy</string>
+    <string name="charging_ready_title">StandBy+ Ready</string>
+    <string name="charging_ready_desc">Your phone is charging. Start your bedside display.</string>
+    <string name="open_standby">Open StandBy+</string>
+    <string name="screensaver_name">StandBy+ Smart Display</string>
+</resources>
