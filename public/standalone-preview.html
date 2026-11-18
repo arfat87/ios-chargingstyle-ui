@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>StandBy+ | Your Phone. Your Smart Display.</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      background-color: #050608;
+    }
+
+    .font-bebas { font-family: 'Bebas Neue', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* 3D Flip Card Animation */
+    @keyframes flipDown {
+      0% { transform: rotateX(0deg); }
+      100% { transform: rotateX(-180deg); }
+    }
+    .flipping {
+      animation: flipDown 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      transform-origin: bottom;
+    }
+
+    /* Soundwave bars */
+    @keyframes wave {
+      0% { height: 15%; }
+      100% { height: 100%; }
+    }
+    .wave-bar {
+      animation: wave 1.1s ease-in-out infinite alternate;
+    }
+
+    /* Edge Lightning */
+    @keyframes edgePulse {
+      0% { opacity: 0.2; }
+      50% { opacity: 0.9; }
+      100% { opacity: 0.2; }
+    }
+    .charging-glow {
+      animation: edgePulse 3s infinite ease-in-out;
+    }
+
+    /* Glassmorphism */
+    .glass-card {
+      background: rgba(22, 24, 32, 0.72);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .glass-card.night {
+      background: rgba(24, 4, 4, 0.78);
+      border: 1px solid rgba(255, 69, 58, 0.3);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 69, 58, 0.25);
+    }
+  </style>
+</head>
+<body class="p-3 text-white min-h-[580px] flex flex-col items-center justify-center">
+
+  <!-- Top Controller Toolbar -->
+  <div class="w-full max-w-4xl flex items-center justify-between mb-3 px-2">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400 font-bold text-xs">
+        S+
+      </div>
+      <div>
+        <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-2">
+          StandBy+ <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-semibold border border-blue-500/30">Live Simulation</span>
+        </h1>
+        <p class="text-[11px] text-zinc-400 -mt-0.5">Your Phone. Your Smart Display.</p>
+      </div>
+    </div>
+
+    <!-- Interactive Toggles -->
+    <div class="flex items-center gap-1.5 text-xs">
+      <!-- Charger Toggle -->
+      <button id="btn-charge" onclick="toggleCharging()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30">
+        <span id="charge-icon">⚡</span>
+        <span id="charge-label">45W Charging</span>
+      </button>
+
+      <!-- Red Night Mode Toggle -->
+      <button id="btn-night" onclick="toggleNightMode()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold transition-all bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700">
+        <span id="night-icon">🌙</span>
+        <span id="night-label">Night Mode</span>
+      </button>
+
+      <!-- Sound Toggle -->
+      <button id="btn-sound" onclick="toggleSound()" class="px-2.5 py-1.5 rounded-full font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700">
+        <span id="sound-icon">🔊</span>
+      </button>
+
+      <!-- Layout Mode -->
+      <button id="btn-layout" onclick="cycleLayout()" class="px-3 py-1.5 rounded-full font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700">
+        <span id="layout-label">Split View</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- StandBy Bedside Phone Frame Container -->
+  <div id="phone-container" class="relative w-full max-w-4xl h-[400px] bg-black rounded-[40px] p-3 border-[3px] border-[#2d3039] shadow-[0_25px_70px_rgba(0,0,0,0.85)] flex flex-col justify-center overflow-hidden transition-all duration-500">
+    
+    <!-- Dynamic Edge Glow when Charging -->
+    <div id="edge-glow" class="absolute inset-0 rounded-[38px] pointer-events-none charging-glow shadow-[inset_0_0_35px_rgba(48,209,88,0.45)] transition-all duration-700 z-10"></div>
+
+    <!-- Phone Camera Pill (Left edge in Landscape) -->
+    <div class="absolute left-3 top-1/2 -translate-y-1/2 w-2.5 h-16 bg-black rounded-full border border-white/10 z-20 flex items-center justify-center">
+      <div class="w-1.5 h-1.5 rounded-full bg-zinc-900 shadow-[inset_0_0_2px_#38bdf8]"></div>
+    </div>
+
+    <!-- Main StandBy Display View -->
+    <div id="standby-viewport" class="relative w-full h-full rounded-[30px] overflow-hidden flex items-center justify-center px-4 transition-transform duration-500">
+      
+      <!-- DUAL SPLIT VIEW -->
+      <div id="view-split" class="w-full h-full flex items-center justify-center gap-4">
+        
+        <!-- Left Slot: Clocks (Tap to cycle) -->
+        <div id="left-card" onclick="cycleClock()" class="glass-card relative flex-1 h-[90%] max-w-[430px] rounded-[24px] cursor-pointer hover:border-white/30 transition-all p-5 flex flex-col items-center justify-center group">
+          <div class="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider text-zinc-500 group-hover:text-zinc-300 flex items-center gap-1">
+            <span>Tap to Switch Clock</span> ↻
+          </div>
+
+          <!-- Digital Clock Display -->
+          <div id="clock-digital" class="flex flex-col items-center justify-center w-full">
+            <div id="clock-date-pill" class="text-xs font-bold uppercase tracking-wider text-orange-400 mb-1">
+              <span id="time-day">WEDNESDAY</span> • <span id="time-date">NOV 18</span>
+            </div>
+            <div class="flex items-baseline font-extrabold tracking-tight text-white leading-none text-6xl md:text-7xl">
+              <span id="digital-hours">05</span>
+              <span id="digital-colon" class="mx-1 text-white opacity-80 animate-pulse">:</span>
+              <span id="digital-minutes">50</span>
+              <div class="ml-2 flex flex-col text-xs font-bold text-zinc-400">
+                <span id="digital-period">AM</span>
+                <span id="digital-seconds" class="font-mono text-orange-400 text-sm">24</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Flip Clock Display (Hidden by default) -->
+          <div id="clock-flip" class="hidden flex items-center justify-center gap-3">
+            <div class="flex flex-col items-center">
+              <div class="relative w-20 h-28 bg-[#181920] border border-[#2d303f] rounded-xl flex flex-col overflow-hidden shadow-lg">
+                <div class="h-1/2 bg-[#181920] flex items-end justify-center border-b border-black">
+                  <span id="flip-hours-top" class="font-bebas text-5xl leading-none text-white translate-y-1/2">05</span>
+                </div>
+                <div class="h-1/2 bg-[#181920] flex items-start justify-center">
+                  <span id="flip-hours-bot" class="font-bebas text-5xl leading-none text-white -translate-y-1/2">05</span>
+                </div>
+                <div class="absolute top-1/2 -left-1 -right-1 h-[2px] bg-black"></div>
+              </div>
+              <span class="text-[10px] font-bold text-zinc-500 mt-1 uppercase">HOURS</span>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <div class="w-2 h-2 rounded-full bg-white"></div>
+              <div class="w-2 h-2 rounded-full bg-white"></div>
+            </div>
+
+            <div class="flex flex-col items-center">
+              <div class="relative w-20 h-28 bg-[#181920] border border-[#2d303f] rounded-xl flex flex-col overflow-hidden shadow-lg">
+                <div class="h-1/2 bg-[#181920] flex items-end justify-center border-b border-black">
+                  <span id="flip-mins-top" class="font-bebas text-5xl leading-none text-white translate-y-1/2">50</span>
+                </div>
+                <div class="h-1/2 bg-[#181920] flex items-start justify-center">
+                  <span id="flip-mins-bot" class="font-bebas text-5xl leading-none text-white -translate-y-1/2">50</span>
+                </div>
+                <div class="absolute top-1/2 -left-1 -right-1 h-[2px] bg-black"></div>
+              </div>
+              <span class="text-[10px] font-bold text-zinc-500 mt-1 uppercase">MINUTES</span>
+            </div>
+          </div>
+
+          <!-- Analog Sweep Clock Display (Hidden by default) -->
+          <div id="clock-analog" class="hidden flex items-center justify-center w-full h-full">
+            <canvas id="analog-canvas" width="220" height="220" class="max-h-[190px]"></canvas>
+          </div>
+        </div>
+
+        <!-- Right Slot: Widgets (Tap to cycle) -->
+        <div id="right-card" onclick="cycleWidget()" class="glass-card relative flex-1 h-[90%] max-w-[430px] rounded-[24px] cursor-pointer hover:border-white/30 transition-all p-5 flex flex-col justify-between group">
+          <div class="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider text-zinc-500 group-hover:text-zinc-300 flex items-center gap-1">
+            <span>Tap to Switch Widget</span> ↻
+          </div>
+
+          <!-- Widget 1: Weather -->
+          <div id="widget-weather" class="w-full h-full flex flex-col justify-between">
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="text-base font-bold text-white">New Delhi</h3>
+                <p class="text-xs text-zinc-400">Clear Sky • Gentle Breeze</p>
+              </div>
+              <div class="text-right">
+                <span class="text-4xl font-extrabold text-white leading-none">24°</span>
+                <p class="text-[11px] font-semibold text-zinc-400 mt-0.5">H:28° L:18°</p>
+              </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="flex items-center justify-between px-3 py-1.5 rounded-xl bg-white/5 text-xs text-zinc-300">
+              <span class="flex items-center gap-1">💧 48% Humidity</span>
+              <span class="flex items-center gap-1">💨 14 km/h Wind</span>
+              <span class="text-blue-400 font-semibold">UV 3 Mod</span>
+            </div>
+
+            <!-- Hourly forecast -->
+            <div class="grid grid-cols-4 gap-2 text-center text-xs">
+              <div class="flex flex-col items-center">
+                <span class="text-[10px] text-zinc-400 font-semibold">Now</span>
+                <span class="text-base my-0.5">☀️</span>
+                <span class="font-bold text-white">24°</span>
+              </div>
+              <div class="flex flex-col items-center">
+                <span class="text-[10px] text-zinc-400 font-semibold">8 AM</span>
+                <span class="text-base my-0.5">🌤️</span>
+                <span class="font-bold text-white">25°</span>
+              </div>
+              <div class="flex flex-col items-center">
+                <span class="text-[10px] text-zinc-400 font-semibold">10 AM</span>
+                <span class="text-base my-0.5">☀️</span>
+                <span class="font-bold text-white">27°</span>
+              </div>
+              <div class="flex flex-col items-center">
+                <span class="text-[10px] text-zinc-400 font-semibold">12 PM</span>
+                <span class="text-base my-0.5">☀️</span>
+                <span class="font-bold text-white">28°</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Widget 2: Calendar & Agenda (Hidden) -->
+          <div id="widget-calendar" class="hidden w-full h-full flex flex-col justify-between">
+            <div class="flex items-center gap-3">
+              <div class="px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
+                <span class="text-[11px] font-extrabold uppercase text-red-500 block leading-tight">NOV</span>
+                <span class="text-2xl font-black text-white leading-none">18</span>
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-white">Wednesday</h4>
+                <p class="text-xs text-zinc-400">2 Events on Agenda</p>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-2 my-1">
+              <div class="flex items-center gap-2 p-2 rounded-xl bg-white/5">
+                <div class="w-1 h-7 rounded bg-emerald-500"></div>
+                <div class="overflow-hidden">
+                  <div class="text-xs font-bold text-white truncate">StandBy+ Product Review</div>
+                  <div class="text-[10px] text-zinc-400">10:00 AM - 11:00 AM • Studio</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 p-2 rounded-xl bg-white/5">
+                <div class="w-1 h-7 rounded bg-blue-500"></div>
+                <div class="overflow-hidden">
+                  <div class="text-xs font-bold text-white truncate">Android APK Deployment</div>
+                  <div class="text-[10px] text-zinc-400">02:30 PM • Google Meet</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Widget 3: Battery Hub (Hidden) -->
+          <div id="widget-battery" class="hidden w-full h-full flex flex-col justify-between">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-bold text-emerald-400 flex items-center gap-1">⚡ Super Fast Charging</span>
+              <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">45W ULTRA</span>
+            </div>
+
+            <div class="flex items-center justify-center gap-5 my-1">
+              <div class="relative w-20 h-20 flex items-center justify-center">
+                <svg class="w-20 h-20 -rotate-90">
+                  <circle cx="40" cy="40" r="32" stroke="#27272a" stroke-width="7" fill="none"/>
+                  <circle cx="40" cy="40" r="32" stroke="#30d158" stroke-width="7" stroke-dasharray="201" stroke-dashoffset="32" stroke-linecap="round" fill="none"/>
+                </svg>
+                <span class="absolute text-emerald-400 text-lg">⚡</span>
+              </div>
+              <div>
+                <span class="text-4xl font-black text-white leading-none">84%</span>
+                <p class="text-xs text-zinc-400 mt-0.5">24m until full</p>
+              </div>
+            </div>
+
+            <div class="flex justify-between text-[11px] text-zinc-400 border-t border-white/10 pt-2">
+              <span>Optimized Charging Active</span>
+              <span>28°C Normal</span>
+            </div>
+          </div>
+
+          <!-- Widget 4: Music Studio (Hidden) -->
+          <div id="widget-music" class="hidden w-full h-full flex flex-col justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-purple-900/40 border border-purple-500/30 flex items-center justify-center text-xl shadow-lg">
+                🎵
+              </div>
+              <div class="flex-1 overflow-hidden">
+                <h4 class="text-sm font-bold text-white truncate">Midnight Ambient Waves</h4>
+                <p class="text-xs text-zinc-400 truncate">Synthesize • StandBy Sessions</p>
+                <!-- Equalizer wave -->
+                <div class="flex items-end gap-1 h-3 mt-1">
+                  <div class="w-1 h-2 bg-pink-500 rounded wave-bar" style="animation-delay: 0s;"></div>
+                  <div class="w-1 h-3 bg-pink-500 rounded wave-bar" style="animation-delay: 0.2s;"></div>
+                  <div class="w-1 h-1.5 bg-pink-500 rounded wave-bar" style="animation-delay: 0.4s;"></div>
+                  <div class="w-1 h-3 bg-pink-500 rounded wave-bar" style="animation-delay: 0.1s;"></div>
+                  <div class="w-1 h-2 bg-pink-500 rounded wave-bar" style="animation-delay: 0.3s;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Scrub bar -->
+            <div class="w-full">
+              <div class="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                <div class="w-2/5 h-full bg-white rounded-full"></div>
+              </div>
+              <div class="flex justify-between text-[10px] text-zinc-400 mt-1">
+                <span>1:14</span>
+                <span>-2:20</span>
+              </div>
+            </div>
+
+            <!-- Play Controls -->
+            <div class="flex justify-center items-center gap-6">
+              <button class="text-white hover:text-zinc-300">⏮</button>
+              <button class="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center font-bold text-xs shadow-md">⏸</button>
+              <button class="text-white hover:text-zinc-300">⏭</button>
+            </div>
+          </div>
+
+          <!-- Widget 5: Reminders (Hidden) -->
+          <div id="widget-reminders" class="hidden w-full h-full flex flex-col justify-between">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-bold text-white">Bedside Checklist</span>
+              <span class="text-xs font-bold text-emerald-400">2/3 Done</span>
+            </div>
+
+            <div class="flex flex-col gap-1.5 my-1 text-xs">
+              <div class="flex items-center gap-2 p-1.5 rounded-lg bg-white/5 line-through text-zinc-400">
+                <span class="text-emerald-400">✓</span> Set morning alarm for 6:30 AM
+              </div>
+              <div class="flex items-center gap-2 p-1.5 rounded-lg bg-white/5 line-through text-zinc-400">
+                <span class="text-emerald-400">✓</span> Drink night glass of water
+              </div>
+              <div class="flex items-center gap-2 p-1.5 rounded-lg bg-white/5 text-white">
+                <span class="text-zinc-500">○</span> StandBy+ Night Mode active
+              </div>
+            </div>
+
+            <span class="text-[10px] text-zinc-500 text-center">Tap tasks to complete</span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Active Pixel Shifting Burn-in Protector Badge -->
+    <div id="burnin-badge" class="absolute bottom-2 left-6 text-[10px] text-zinc-500 font-mono flex items-center gap-1.5 pointer-events-none">
+      <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+      <span>AMOLED Burn-In Guard: ±1px shift active</span>
+    </div>
+
+  </div>
+
+  <!-- Bottom Info & Android Status Card -->
+  <div class="w-full max-w-4xl mt-3 flex items-center justify-between text-xs text-zinc-400 px-2">
+    <div class="flex items-center gap-3">
+      <span>📱 Android 10+ (API 29–34)</span>
+      <span>•</span>
+      <span>📦 Package: <code class="text-zinc-300 font-mono">com.standbyplus.app</code></span>
+      <span>•</span>
+      <span>⚡ Built APK: <code class="text-emerald-400 font-mono">app-debug.apk (56MB)</code></span>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <span class="text-[11px] text-zinc-500">Try tapping on either clock or widget to cycle through styles!</span>
+    </div>
+  </div>
+
+  <script>
+    // State variables
+    let isCharging = true;
+    let isNightMode = false;
+    let soundEnabled = true;
+    let clockStyleIndex = 0; // 0: Digital, 1: Flip, 2: Analog
+    let widgetIndex = 0; // 0: Weather, 1: Calendar, 2: Battery, 3: Music, 4: Reminders
+    let audioCtx = null;
+
+    // Web Audio Synthesizer
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playChime() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        
+        // E5 note
+        const osc1 = ctx.createOscillator();
+        const g1 = ctx.createGain();
+        osc1.frequency.setValueAtTime(659.25, now);
+        g1.gain.setValueAtTime(0.2, now);
+        g1.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+        osc1.connect(g1);
+        g1.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.65);
+
+        // G#5 note
+        const osc2 = ctx.createOscillator();
+        const g2 = ctx.createGain();
+        osc2.frequency.setValueAtTime(830.61, now + 0.12);
+        g2.gain.setValueAtTime(0.25, now + 0.12);
+        g2.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+        osc2.connect(g2);
+        g2.connect(ctx.destination);
+        osc2.start(now + 0.12);
+        osc2.stop(now + 0.95);
+      } catch (e) {}
+    }
+
+    function playTick() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.04);
+        g.gain.setValueAtTime(0.15, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        osc.connect(g);
+        g.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.045);
+      } catch (e) {}
+    }
+
+    // Toggle Charging
+    function toggleCharging() {
+      isCharging = !isCharging;
+      const btn = document.getElementById('btn-charge');
+      const glow = document.getElementById('edge-glow');
+      const label = document.getElementById('charge-label');
+      const icon = document.getElementById('charge-icon');
+
+      if (isCharging) {
+        playChime();
+        btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30";
+        label.innerText = "45W Charging";
+        icon.innerText = "⚡";
+        glow.style.display = 'block';
+      } else {
+        btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold transition-all bg-zinc-800 text-zinc-400 border border-zinc-700 hover:bg-zinc-700";
+        label.innerText = "On Battery";
+        icon.innerText = "🔋";
+        glow.style.display = 'none';
+      }
+    }
+
+    // Toggle Night Mode (Red Shift)
+    function toggleNightMode() {
+      isNightMode = !isNightMode;
+      const btn = document.getElementById('btn-night');
+      const leftCard = document.getElementById('left-card');
+      const rightCard = document.getElementById('right-card');
+      const glow = document.getElementById('edge-glow');
+
+      if (isNightMode) {
+        btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold transition-all bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30";
+        document.getElementById('night-label').innerText = "Red Active";
+        leftCard.classList.add('night');
+        rightCard.classList.add('night');
+        glow.style.boxShadow = "inset 0 0 45px rgba(255, 69, 58, 0.55)";
+        document.querySelectorAll('#standby-viewport *').forEach(el => {
+          if (el.classList.contains('text-white')) {
+            el.classList.remove('text-white');
+            el.classList.add('text-red-500');
+          }
+        });
+      } else {
+        btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold transition-all bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700";
+        document.getElementById('night-label').innerText = "Night Mode";
+        leftCard.classList.remove('night');
+        rightCard.classList.remove('night');
+        glow.style.boxShadow = "inset 0 0 35px rgba(48, 209, 88, 0.45)";
+        document.querySelectorAll('#standby-viewport *').forEach(el => {
+          if (el.classList.contains('text-red-500')) {
+            el.classList.remove('text-red-500');
+            el.classList.add('text-white');
+          }
+        });
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('sound-icon').innerText = soundEnabled ? "🔊" : "🔇";
+    }
+
+    // Cycle Clocks
+    function cycleClock() {
+      playTick();
+      clockStyleIndex = (clockStyleIndex + 1) % 3;
+      document.getElementById('clock-digital').classList.toggle('hidden', clockStyleIndex !== 0);
+      document.getElementById('clock-flip').classList.toggle('hidden', clockStyleIndex !== 1);
+      document.getElementById('clock-analog').classList.toggle('hidden', clockStyleIndex !== 2);
+    }
+
+    // Cycle Widgets
+    function cycleWidget() {
+      playTick();
+      widgetIndex = (widgetIndex + 1) % 5;
+      document.getElementById('widget-weather').classList.toggle('hidden', widgetIndex !== 0);
+      document.getElementById('widget-calendar').classList.toggle('hidden', widgetIndex !== 1);
+      document.getElementById('widget-battery').classList.toggle('hidden', widgetIndex !== 2);
+      document.getElementById('widget-music').classList.toggle('hidden', widgetIndex !== 3);
+      document.getElementById('widget-reminders').classList.toggle('hidden', widgetIndex !== 4);
+    }
+
+    function cycleLayout() {
+      cycleClock();
+      cycleWidget();
+    }
+
+    // Real-Time Clock Loop
+    function updateClock() {
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const seconds = now.getSeconds().toString().padStart(2, '0');
+      const period = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      const formattedHours = hours.toString().padStart(2, '0');
+
+      // Digital elements
+      document.getElementById('digital-hours').innerText = formattedHours;
+      document.getElementById('digital-minutes').innerText = minutes;
+      document.getElementById('digital-seconds').innerText = seconds;
+      document.getElementById('digital-period').innerText = period;
+
+      // Flip elements
+      document.getElementById('flip-hours-top').innerText = formattedHours;
+      document.getElementById('flip-hours-bot').innerText = formattedHours;
+      document.getElementById('flip-mins-top').innerText = minutes;
+      document.getElementById('flip-mins-bot').innerText = minutes;
+
+      // Draw Analog Canvas
+      drawAnalog(now);
+    }
+
+    function drawAnalog(date) {
+      const canvas = document.getElementById('analog-canvas');
+      if (!canvas || canvas.offsetParent === null) return;
+      const ctx = canvas.getContext('2d');
+      const radius = canvas.width / 2;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.translate(radius, radius);
+
+      // Dial face
+      ctx.beginPath();
+      ctx.arc(0, 0, radius - 10, 0, 2 * Math.PI);
+      ctx.fillStyle = isNightMode ? '#140303' : '#14161f';
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = isNightMode ? '#450a0a' : '#282b36';
+      ctx.stroke();
+
+      // 12 Ticks
+      for (let i = 0; i < 12; i++) {
+        const ang = (i * Math.PI) / 6;
+        ctx.rotate(ang);
+        ctx.beginPath();
+        ctx.moveTo(0, -(radius - 24));
+        ctx.lineTo(0, -(radius - 14));
+        ctx.strokeStyle = isNightMode ? '#ff453a' : (i % 3 === 0 ? '#ffffff' : '#71717a');
+        ctx.lineWidth = i % 3 === 0 ? 3 : 1.5;
+        ctx.stroke();
+        ctx.rotate(-ang);
+      }
+
+      // Hands
+      const hr = (date.getHours() % 12) * 5 + (date.getMinutes() / 60) * 5;
+      const min = date.getMinutes() + date.getSeconds() / 60;
+      const sec = date.getSeconds() + date.getMilliseconds() / 1000;
+
+      // Hour hand
+      drawHand(ctx, (hr * Math.PI) / 30, radius * 0.45, 5, isNightMode ? '#ff453a' : '#ffffff');
+      // Minute hand
+      drawHand(ctx, (min * Math.PI) / 30, radius * 0.65, 3.5, isNightMode ? '#ff453a' : '#ffffff');
+      // Second hand
+      drawHand(ctx, (sec * Math.PI) / 30, radius * 0.78, 1.8, isNightMode ? '#ff453a' : '#ff9f0a');
+
+      // Center Pin
+      ctx.beginPath();
+      ctx.arc(0, 0, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = isNightMode ? '#ff453a' : '#ff9f0a';
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawHand(ctx, pos, length, width, color) {
+      ctx.beginPath();
+      ctx.lineWidth = width;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = color;
+      ctx.moveTo(0, 0);
+      ctx.rotate(pos);
+      ctx.lineTo(0, -length);
+      ctx.stroke();
+      ctx.rotate(-pos);
+    }
+
+    // Micro Pixel Shifting (every 20s for demo)
+    setInterval(() => {
+      const x = Math.floor(Math.random() * 5) - 2;
+      const y = Math.floor(Math.random() * 5) - 2;
+      document.getElementById('standby-viewport').style.transform = `translate(${x}px, ${y}px)`;
+    }, 20000);
+
+    // Initial tick & loop
+    updateClock();
+    setInterval(updateClock, 100);
+  </script>
+</body>
+</html>
